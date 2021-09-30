@@ -1,12 +1,6 @@
 /* XMRig
- * Copyright 2010      Jeff Garzik <jgarzik@pobox.com>
- * Copyright 2012-2014 pooler      <pooler@litecoinpool.org>
- * Copyright 2014      Lucas Jones <https://github.com/lucasjones>
- * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
- * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
- * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
- * Copyright 2018-2020 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2020 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright (c) 2018-2021 SChernykh   <https://github.com/SChernykh>
+ * Copyright (c) 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -27,6 +21,7 @@
 
 
 #include "3rdparty/rapidjson/fwd.h"
+#include "base/tools/Object.h"
 
 
 #include <functional>
@@ -47,6 +42,8 @@ class Miner;
 class IClient
 {
 public:
+    XMRIG_DISABLE_COPY_MOVE(IClient)
+
     enum Extension {
         EXT_ALGO,
         EXT_NICEHASH,
@@ -58,7 +55,8 @@ public:
 
     using Callback = std::function<void(const rapidjson::Value &result, bool success, uint64_t elapsed)>;
 
-    virtual ~IClient() = default;
+    IClient()           = default;
+    virtual ~IClient()  = default;
 
     virtual bool disconnect()                                               = 0;
     virtual bool hasExtension(Extension extension) const noexcept           = 0;
@@ -88,7 +86,7 @@ public:
     virtual void setRetryPause(uint64_t ms)                                 = 0;
     virtual void tick(uint64_t now)                                         = 0;
     virtual void set_algo_perf_same_threshold(uint64_t)                     = 0;
-    virtual bool try_miner(const Miner*)                                    = 0;
+    virtual bool try_miner(const Miner*, int upstream_count)                = 0;
     virtual void add_miner(const Miner*)                                    = 0;
     virtual void del_miner(const Miner*)                                    = 0;
 };

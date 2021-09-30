@@ -94,6 +94,9 @@ static struct option const options[] = {
     { "access-password",   1, nullptr, IConfig::ProxyPasswordKey  },
     { "login-file",        1, nullptr, IConfig::LoginFileKey      },
     { "data-dir",          1, nullptr, IConfig::DataDirKey        },
+    { "dns-ipv6",          0, nullptr, IConfig::DnsIPv6Key        },
+    { "dns-ttl",           1, nullptr, IConfig::DnsTtlKey         },
+    { "spend-secret-key",  1, nullptr, IConfig::SpendSecretKey    },
     { nullptr,             0, nullptr, 0 }
 };
 

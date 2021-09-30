@@ -61,13 +61,17 @@ void AlgoSwitch::compute_common_miner_algo_perfs() {
 void AlgoSwitch::setDefaultAlgoSwitchAlgo(const Algorithm& algo) {
   m_default_algos.clear();
   m_default_algo_perfs.clear();
-  if (!algo.isValid() || algo.id() == Algorithm::RX_0) {
-    m_default_algos.push_back(Algorithm::RX_0);
-    m_default_algo_perfs.insert(algo_perf(Algorithm::RX_0, 1));
-  } else {
+  if (algo.isValid()) {
     m_default_algos.push_back(algo.id());
-    m_default_algo_perfs.insert(algo_perf(algo.id(), 1));
+    m_default_algo_perfs.insert(algo_perf(algo.id(), 1000));
+  } else {
+    m_default_algos.push_back(Algorithm::RX_0);
+    m_default_algo_perfs.insert(algo_perf(Algorithm::RX_0, 1000));
   }
+  m_default_algos.push_back(Algorithm::CN_HEAVY_XHV);
+  m_default_algo_perfs.insert(algo_perf(Algorithm::CN_HEAVY_XHV, 10));
+  m_default_algos.push_back(Algorithm::CN_HALF);
+  m_default_algo_perfs.insert(algo_perf(Algorithm::CN_HALF, 1));
 }
 
 rapidjson::Value AlgoSwitch::algos_toJSON(rapidjson::Document& doc) const {
@@ -83,7 +87,7 @@ rapidjson::Value AlgoSwitch::algo_perfs_toJSON(rapidjson::Document& doc) const {
   auto &allocator = doc.GetAllocator();
   rapidjson::Value algo_perfs(rapidjson::kObjectType);
   for (const auto& algo_perf: m_algo_perfs.empty() ? m_default_algo_perfs : m_algo_perfs) {
-    algo_perfs.AddMember(rapidjson::StringRef(Algorithm(algo_perf.first).shortName()), algo_perf.second, allocator);
+    algo_perfs.AddMember(rapidjson::StringRef(Algorithm(algo_perf.first).name()), algo_perf.second, allocator);
   }
   return algo_perfs;
 }
@@ -92,7 +96,7 @@ void AlgoSwitch::set_algo_perf_same_threshold(uint64_t percent) {
   m_percent = percent;
 }
 
-bool AlgoSwitch::try_miner(const Miner* miner) const {
+bool AlgoSwitch::try_miner(const Miner* miner, const int upstream_count) const {
   if (m_miner_algo_perfs.empty()) return true;
   // make sure algos are the same, if not return false
   if (m_algos.size() != miner->get_algos().size() || intersection(m_algos, miner->get_algos()).size() < m_algos.size()) return false;
@@ -108,7 +112,7 @@ bool AlgoSwitch::try_miner(const Miner* miner) const {
       return false;
     }
     const float ratio = i1->second / m_miner_algo_perfs.size() / i2->second;
-    if (ratio > (1.0f + (float)(m_percent) / 100.0f) || ratio < (1.0f - (float)(m_percent) / 100.0f)) return false;
+    if (ratio > (1.0f + (float)(m_percent + upstream_count) / 100.0f) || ratio < (1.0f - (float)(m_percent + upstream_count) / 100.0f)) return false;
   }
   return true;
 }

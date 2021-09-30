@@ -1,3 +1,29 @@
+# v6.15.0
+- [#463](https://github.com/xmrig/xmrig-proxy/pull/463) Added `--spend-secret-key` to command line option.
+- [#465](https://github.com/xmrig/xmrig-proxy/pull/465) Added ZeroMQ support for solo mining.
+- [#2548](https://github.com/xmrig/xmrig/pull/2548) Added automatic coin detection for daemon mining.
+- [#2563](https://github.com/xmrig/xmrig/pull/2563) Added new algorithm RandomX Graft (`rx/graft`).
+
+# v6.14.0
+- [#460](https://github.com/xmrig/xmrig-proxy/pull/460) Added new mode: `extra_nonce` for solo mining.
+- Fixed `simple` mode for Wownero.
+
+# v6.13.0
+- [#458](https://github.com/xmrig/xmrig-proxy/pull/458) Added support for solo mining with miner signatures for the upcoming Wownero fork.
+
+# v6.12.0
+- [#2276](https://github.com/xmrig/xmrig/pull/2276) Added support for Uplexa (`cn/upx2` algorithm).
+
+# v6.11.0
+- [#2196](https://github.com/xmrig/xmrig/pull/2196) Improved DNS subsystem and added new DNS specific options.
+- [#2207](https://github.com/xmrig/xmrig/issues/2207) Fixed regression in HTTP parser and llhttp updated to v5.1.0.
+ 
+# v6.10.1
+- [#441](https://github.com/xmrig/xmrig-proxy/issues/441) Fixed send buffer overflow with custom diff.
+
+# v6.10.0
+- Sync changes with XMRig 6.10.0.
+
 # v6.4.0
 - [#1862](https://github.com/xmrig/xmrig/pull/1862) RandomX: removed `rx/loki` algorithm.
 - [#1890](https://github.com/xmrig/xmrig/pull/1890) Added `argon2/chukwav2` algorithm.
