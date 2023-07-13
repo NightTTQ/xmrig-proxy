@@ -1,3 +1,17 @@
+# v6.19.2
+- [#532](https://github.com/xmrig/xmrig-proxy/pull/532) Added view tag calculation (fixes Wownero solo mining issue).
+- Sync with latest XMRig.
+ 
+# v6.19.0
+- [#530](https://github.com/xmrig/xmrig-proxy/pull/530) Sync with latest XMRig.
+
+# v6.18.0
+- Sync changes with XMRig v6.18.0
+- [#499](https://github.com/xmrig/xmrig-proxy/pull/499) Fixed socket and memory leak.
+
+# v6.15.1
+- [#2586](https://github.com/xmrig/xmrig/pull/2586) Fixed Windows 7 compatibility.
+
 # v6.15.0
 - [#463](https://github.com/xmrig/xmrig-proxy/pull/463) Added `--spend-secret-key` to command line option.
 - [#465](https://github.com/xmrig/xmrig-proxy/pull/465) Added ZeroMQ support for solo mining.

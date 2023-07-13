@@ -92,7 +92,7 @@ xmrig::Miner::~Miner()
         delete m_socket;
     }
     else {
-        uv_close(reinterpret_cast<uv_handle_t *>(m_socket), [](uv_handle_t *handle) { delete handle; });
+        uv_close(reinterpret_cast<uv_handle_t *>(m_socket), [](uv_handle_t *handle) { delete reinterpret_cast<uv_tcp_t *>(handle); });
     }
 
 #   ifdef XMRIG_FEATURE_TLS
@@ -149,7 +149,7 @@ void xmrig::Miner::setJob(Job &job, int64_t extra_nonce)
 
     if (hasExtension(EXT_NICEHASH)) {
         snprintf(m_sendBuf, 4, "%02hhx", m_fixedByte);
-        memcpy(job.rawBlob() + 84, m_sendBuf, 2);
+        memcpy(job.rawBlob() + (job.nonceOffset() + 3)*2, m_sendBuf, 2);
     }
 
     m_diff = job.diff();
@@ -165,10 +165,14 @@ void xmrig::Miner::setJob(Job &job, int64_t extra_nonce)
     String tmp_blob;
 
     if (job.hasMinerSignature()) {
-        job.generateSignatureData(m_signatureData);
+        job.generateSignatureData(m_signatureData, m_viewTag);
     }
     else if (!job.rawSigKey().isNull()) {
         m_signatureData = job.rawSigKey();
+    }
+
+    if (job.hasViewTag()) {
+        job.setViewTagInMinerTx(m_viewTag);
     }
 
     if (extra_nonce >= 0) {
@@ -269,7 +273,7 @@ bool xmrig::Miner::parseRequest(int64_t id, const char *method, const rapidjson:
 
         Algorithm algorithm(Json::getString(params, "algo"));
 
-        SubmitEvent *event = SubmitEvent::create(this, id, Json::getString(params, "job_id"), Json::getString(params, "nonce"), Json::getString(params, "result"), algorithm, Json::getString(params, "sig"), m_signatureData, m_extraNonce);
+        SubmitEvent *event = SubmitEvent::create(this, id, Json::getString(params, "job_id"), Json::getString(params, "nonce"), Json::getString(params, "result"), algorithm, Json::getString(params, "sig"), m_signatureData, m_viewTag, m_extraNonce);
 
         if (!event->request.isValid() || event->request.actualDiff() < diff()) {
             event->reject(Error::LowDifficulty);
@@ -382,7 +386,7 @@ void xmrig::Miner::read(ssize_t nread, const uv_buf_t *buf)
     const auto size = static_cast<size_t>(nread);
 
     if (nread < 0) {
-        return shutdown(nread != UV_EOF);;
+        return shutdown(nread != UV_EOF);
     }
 
     if (size && m_rx == 0) {
@@ -551,7 +555,7 @@ void xmrig::Miner::setState(State state)
 }
 
 
-void xmrig::Miner::shutdown(bool)
+void xmrig::Miner::shutdown(bool had_error)
 {
     if (m_state == ClosingState) {
         return;
@@ -559,6 +563,22 @@ void xmrig::Miner::shutdown(bool)
 
     setState(ClosingState);
     uv_read_stop(reinterpret_cast<uv_stream_t*>(m_socket));
+
+    // uv_shutdown gets stuck when the connection was not terminated gracefully
+    if (had_error) {
+        if (uv_is_closing(reinterpret_cast<uv_handle_t*>(m_socket)) == 0) {
+            uv_close(reinterpret_cast<uv_handle_t*>(m_socket), [](uv_handle_t* handle) {
+                Miner* miner = getMiner(handle->data);
+                if (!miner) {
+                    return;
+                }
+
+                CloseEvent::start(miner);
+                m_storage.remove(handle->data);
+            });
+        }
+        return;
+    }
 
     uv_shutdown(new uv_shutdown_t, reinterpret_cast<uv_stream_t*>(m_socket), [](uv_shutdown_t* req, int) {
 
