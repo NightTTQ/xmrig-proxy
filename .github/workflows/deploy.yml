@@ -99,11 +99,11 @@ jobs:
           make -j$(nproc)
           cp src/config.json .
           tar cfz ubuntu12_build.tar.gz xmrig-proxy config.json
-      # - name: Upload Ubuntu 12.04 build artifacts
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ubuntu12_build
-      #     path: /tmp/docker/ubuntu12_build.tar.gz
+      - name: Upload Ubuntu 12.04 build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ubuntu12_build
+          path: /tmp/docker/ubuntu12_build.tar.gz
 
   deploy:
     needs: [build_win, build_lin, build_macos, build_lin_ub12]
@@ -124,28 +124,28 @@ jobs:
         id: version
         run: echo ::set-output name=VERSION::$GITHUB_REF_NAME
       - name: Download Windows build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v1
         with:
           name: windows_build
       - name: Download Ubuntu build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v1
         with:
           name: ubuntu_build
       - name: Download MacOS build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v1
         with:
           name: macos_build
-      # - name: Download Ubuntu 12.04 build artifacts
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: ubuntu12_build
+      - name: Download Ubuntu 12.04 build artifacts
+        uses: actions/download-artifact@v1
+        with:
+          name: ubuntu12_build
       - name: Upload Windows build release asset
         uses: actions/upload-release-asset@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: windows_build/windows_build.zip
+          asset_path: windows_build.zip
           asset_name: xmrig-proxy-${{steps.version.outputs.VERSION}}-win64.zip
           asset_content_type: application/zip
       - name: Upload Ubuntu build release asset
@@ -154,7 +154,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ubuntu_build/ubuntu_build.tar.gz
+          asset_path: ubuntu_build.tar.gz
           asset_name: xmrig-proxy-${{steps.version.outputs.VERSION}}-lin64.tar.gz
           asset_content_type: application/zip
       - name: Upload MacOS build release asset
@@ -163,15 +163,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: macos_build/macos_build.tar.gz
+          asset_path: macos_build.tar.gz
           asset_name: xmrig-proxy-${{steps.version.outputs.VERSION}}-mac64.tar.gz
           asset_content_type: application/zip
-      # - name: Upload Ubuntu 12.04 build release asset
-      #   uses: actions/upload-release-asset@v1.0.1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-      #     asset_path: ubuntu12_build/ubuntu12_build.tar.gz
-      #     asset_name: xmrig-proxy-${{steps.version.outputs.VERSION}}-lin64-compat.tar.gz
-      #     asset_content_type: application/zip
+      - name: Upload Ubuntu 12.04 build release asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ubuntu12_build.tar.gz
+          asset_name: xmrig-proxy-${{steps.version.outputs.VERSION}}-lin64-compat.tar.gz
+          asset_content_type: application/zip
