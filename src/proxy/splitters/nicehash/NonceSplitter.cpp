@@ -32,7 +32,6 @@
 #include "proxy/events/SubmitEvent.h"
 #include "proxy/Miner.h"
 #include "proxy/splitters/nicehash/NonceMapper.h"
-#include "base/kernel/interfaces/IClient.h"
 #include "Summary.h"
 
 
@@ -79,7 +78,6 @@ xmrig::Upstreams xmrig::NonceSplitter::upstreams() const
 void xmrig::NonceSplitter::connect()
 {
     auto upstream = new NonceMapper(m_upstreams.size(), m_controller);
-    upstream->client()->set_algo_perf_same_threshold(m_controller->config()->algoPerfSameThreshold());
     m_upstreams.push_back(upstream);
 
     upstream->start();
@@ -140,7 +138,6 @@ void xmrig::NonceSplitter::onConfigChanged(Config *config, Config *previousConfi
 
         for (NonceMapper *mapper : m_upstreams) {
             mapper->reload(config->pools());
-            mapper->client()->set_algo_perf_same_threshold(config->algoPerfSameThreshold());
         }
     }
 }
@@ -176,14 +173,14 @@ void xmrig::NonceSplitter::login(LoginEvent *event)
 
     // try reuse active upstreams.
     for (NonceMapper *mapper : m_upstreams) {
-        if (mapper->client()->try_miner(event->miner(), m_upstreams.size()) && !mapper->isSuspended() && mapper->add(event->miner())) {
+        if (!mapper->isSuspended() && mapper->add(event->miner())) {
             return;
         }
     }
 
     // try reuse suspended upstreams.
     for (NonceMapper *mapper : m_upstreams) {
-        if (mapper->client()->try_miner(event->miner(), m_upstreams.size()) && mapper->isSuspended() && mapper->add(event->miner())) {
+        if (mapper->isSuspended() && mapper->add(event->miner())) {
             return;
         }
     }

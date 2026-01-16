@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 project(xmrig-proxy)
 
 
@@ -9,9 +9,10 @@ option(WITH_TLS             "Enable OpenSSL support"  ON)
 option(WITH_ENV_VARS        "Enable environment variables support in config file" ON)
 
 
-include (CheckIncludeFile)
-include (cmake/os.cmake)
-include (src/base/base.cmake)
+include(CheckIncludeFile)
+include(cmake/cpu.cmake)
+include(cmake/os.cmake)
+include(src/base/base.cmake)
 
 
 set(HEADERS
@@ -153,11 +154,9 @@ add_definitions(/DXMRIG_ALGO_RANDOMX)
 add_definitions(/DXMRIG_ALGO_CN_LITE)
 add_definitions(/DXMRIG_ALGO_CN_HEAVY)
 add_definitions(/DXMRIG_ALGO_CN_PICO)
-add_definitions(/DXMRIG_ALGO_CN_GPU)
 add_definitions(/DXMRIG_ALGO_CN_FEMTO)
 add_definitions(/DXMRIG_ALGO_ARGON2)
 add_definitions(/DXMRIG_ALGO_ASTROBWT)
-add_definitions(/DXMRIG_ALGO_GHOSTRIDER)
 
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$" AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     add_definitions(/DRAPIDJSON_SSE2)
@@ -196,3 +195,7 @@ include_directories(${UV_INCLUDE_DIR})
 
 add_executable(${CMAKE_PROJECT_NAME} ${HEADERS} ${SOURCES} ${SOURCES_OS} ${SOURCES_SYSLOG} ${HTTP_SOURCES} ${TLS_SOURCES})
 target_link_libraries(${CMAKE_PROJECT_NAME} ${OPENSSL_LIBRARIES} ${UV_LIBRARIES} ${EXTRA_LIBS} ${GOOGLE_BREAKPAD_LIBS})
+
+if (CMAKE_CXX_COMPILER_ID MATCHES Clang AND CMAKE_BUILD_TYPE STREQUAL Release AND NOT CMAKE_GENERATOR STREQUAL Xcode)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_STRIP} "$<TARGET_FILE:${CMAKE_PROJECT_NAME}>")
+endif()

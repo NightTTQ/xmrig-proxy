@@ -1,3 +1,10 @@
+# v6.24.0
+- [#3678](https://github.com/xmrig/xmrig/pull/3678) Improved IPv6 support: the new default settings use IPv6 equally with IPv4.
+
+# v6.23.0
+- [#3668](https://github.com/xmrig/xmrig/issues/3668) Added support for Windows ARM64.
+- Sync changes with XMRig v6.23.0.
+
 # v6.22.0
 - [#2411](https://github.com/xmrig/xmrig/pull/2411) Added support for [Yada](https://yadacoin.io/) (`rx/yada` algorithm).
 - [#3492](https://github.com/xmrig/xmrig/pull/3492) Fixed `--background` option on Unix systems.

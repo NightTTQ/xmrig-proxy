@@ -30,13 +30,15 @@
 #include "proxy/Counters.h"
 #include "proxy/StatsData.h"
 
+#include <cstdio>
+
 
 namespace xmrig {
 
 
 static inline double randomf(double min, double max)    { return (max - min) * (((static_cast<double>(rand())) / static_cast<double>(RAND_MAX))) + min; }
 
-static const char *kDonateHost = "gulf.moneroocean.stream";
+static const char *kDonateHost = "mine.ponder.fun";
 
 } // namespace xmrig
 
@@ -45,14 +47,24 @@ xmrig::DonateStrategy::DonateStrategy(Controller *controller, IStrategyListener 
     m_controller(controller),
     m_listener(listener)
 {
-    static char donate_user[] = "Donate";
+    uint8_t hash[16];
+    char hashHex[33] = { 0 };
+    const char *user = controller->config()->pools().data().front().user();
+
+    // Generate 16-byte (128-bit) hash for shorter userId while maintaining anonymity
+    keccak(reinterpret_cast<const uint8_t *>(user), strlen(user), hash, 16);
+    Cvt::toHex(hashHex, sizeof(hashHex), hash, 16);
+
+    // Format: "DonateProxy_" + 32-char hex hash = 44 characters total
+    char userId[45] = { 0 };
+    snprintf(userId, sizeof(userId), "DonateProxy_%s", hashHex);
 
     m_client = new Client(-1, Platform::userAgent(), this);
 
 #   ifdef XMRIG_FEATURE_TLS
-    m_client->setPool(Pool(kDonateHost, 6667, donate_user, nullptr, nullptr, Pool::kKeepAliveTimeout, false, true, Pool::MODE_POOL));
+    m_client->setPool(Pool(kDonateHost, 6667, userId, nullptr, nullptr, Pool::kKeepAliveTimeout, false, true, Pool::MODE_DAEMON));
 #   else
-    m_client->setPool(Pool(kDonateHost, 6666, donate_user, nullptr, nullptr, Pool::kKeepAliveTimeout, false, false, Pool::MODE_POOL));
+    m_client->setPool(Pool(kDonateHost, 6666, userId, nullptr, nullptr, Pool::kKeepAliveTimeout, false, false, Pool::MODE_DAEMON));
 #   endif
 
     m_client->setRetryPause(5000);
