@@ -74,10 +74,12 @@ jobs:
   build_lin_ub12:
     name: Build Ubuntu 12.04 artifacts
     runs-on: ubuntu-latest
-    container: ubuntu:12.04
     steps:
-      - name: Prepare build tools
+      - name: Run build inside docker
         run: |
+          mkdir /tmp/docker
+          cat >/tmp/docker/script.sh <<EOF
+          set -x
           sed -i -r 's/(archive|security).ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
           apt-get update
           apt-get install -y python-software-properties
@@ -88,17 +90,19 @@ jobs:
           curl -sSL https://cmake.org/files/v3.27/cmake-3.27.9-linux-x86_64.tar.gz | tar -xzC /opt
           git clone --depth 1 git://sourceware.org/git/binutils-gdb.git /tmp/binutils-gdb
           (cd /tmp/binutils-gdb && git checkout binutils-2_38 && CC=gcc ./configure && make -j$(nproc) && make install)
-      - name: Checkout code
-        run: |
-          git clone https://github.com/NightTTQ/xmrig-proxy.git .
+
+          git clone https://github.com/NightTTQ/xmrig-proxy.git
+          cd xmrig-proxy
           git checkout $GITHUB_REF_NAME
-      - name: Build project on Ubuntu 12.04
-        run: |
-          cd scripts && ./build_deps.sh && cd ..
+
+          (cd scripts && ./build_deps.sh && cd ..)
           /opt/cmake-3.27.9-linux-x86_64/bin/cmake . -DXMRIG_DEPS=scripts/deps
           make -j$(nproc)
           cp src/config.json .
-          tar cfz ubuntu12_build.tar.gz xmrig-proxy config.json
+          tar cfz /tmp/docker/ubuntu12_build.tar.gz xmrig-proxy config.json
+          EOF
+          chmod +x /tmp/docker/script.sh
+          docker run -i -v /tmp/docker:/tmp/docker ubuntu:12.04 /bin/bash -c /tmp/docker/script.sh
       - name: Upload Ubuntu 12.04 build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -124,19 +128,19 @@ jobs:
         id: version
         run: echo ::set-output name=VERSION::$GITHUB_REF_NAME
       - name: Download Windows build artifacts
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           name: windows_build
       - name: Download Ubuntu build artifacts
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           name: ubuntu_build
       - name: Download MacOS build artifacts
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           name: macos_build
       - name: Download Ubuntu 12.04 build artifacts
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           name: ubuntu12_build
       - name: Upload Windows build release asset
